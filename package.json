@@ -1,0 +1,26 @@
+{
+  "name": "falcon-suppression-system",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test:part1": "node test-one.js",
+    "test:part2": "node test-two.js",
+    "test:part3": "node test-three.js",
+    "test:part4": "node test-four.js",
+    "test:system": "node test-complete.js",
+    "test": "npm run test:one && npm run test:two && npm run test:three && npm run test:four && npm run test:system"
+  },
+  "author": "amanshumi",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "csv-parser": "^3.2.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  }
+}

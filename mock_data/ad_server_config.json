@@ -1,0 +1,195 @@
+{
+  "advertisers": [
+    {
+      "id": "adv_techcorp",
+      "name": "TechCorp Solutions",
+      "campaigns": [
+        {
+          "id": "camp_techcorp_001",
+          "name": "Q1 Software Launch",
+          "banners": [
+            {
+              "id": "banner_techcorp_001",
+              "name": "TechCorp Free Trial Banner",
+              "creative_url": "https://cdn.example.com/techcorp_free_trial.jpg",
+              "landing_page": "https://techcorp.com/free-trial",
+              "weight": 100,
+              "targeting_rules": {
+                "include_params": {},
+                "exclude_params": {
+                  "suppress_advertisers": ["adv_techcorp"]
+                }
+              }
+            },
+            {
+              "id": "banner_techcorp_002", 
+              "name": "TechCorp Premium Upgrade Banner",
+              "creative_url": "https://cdn.example.com/techcorp_upgrade.jpg",
+              "landing_page": "https://techcorp.com/upgrade",
+              "weight": 150,
+              "targeting_rules": {
+                "include_params": {
+                  "user_segment": "enterprise"
+                },
+                "exclude_params": {
+                  "suppress_advertisers": ["adv_techcorp"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "adv_gamestudio",
+      "name": "GameStudio Inc",
+      "campaigns": [
+        {
+          "id": "camp_gamestudio_001",
+          "name": "Mobile Game Launch",
+          "banners": [
+            {
+              "id": "banner_gamestudio_001",
+              "name": "GameStudio Download Game Banner",
+              "creative_url": "https://cdn.example.com/gamestudio_download.jpg", 
+              "landing_page": "https://gamestudio.com/download",
+              "weight": 120,
+              "targeting_rules": {
+                "include_params": {},
+                "exclude_params": {
+                  "suppress_advertisers": ["adv_gamestudio"]
+                }
+              }
+            },
+            {
+              "id": "banner_gamestudio_002",
+              "name": "GameStudio In-App Purchase Banner",
+              "creative_url": "https://cdn.example.com/gamestudio_iap.jpg",
+              "landing_page": "https://gamestudio.com/purchase",
+              "weight": 80,
+              "targeting_rules": {
+                "include_params": {
+                  "user_segment": "active_gamer"
+                },
+                "exclude_params": {
+                  "suppress_advertisers": ["adv_gamestudio"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "adv_luxurystore",
+      "name": "LuxuryStore Premium",
+      "campaigns": [
+        {
+          "id": "camp_luxury_001",
+          "name": "Luxury Fashion Campaign",
+          "banners": [
+            {
+              "id": "banner_luxury_001",
+              "name": "LuxuryStore VIP Collection",
+              "creative_url": "https://cdn.example.com/luxury_vip.jpg",
+              "landing_page": "https://luxurystore.com/vip",
+              "weight": 200,
+              "targeting_rules": {
+                "include_params": {
+                  "user_segment": "high_value"
+                },
+                "exclude_params": {
+                  "suppress_advertisers": ["adv_luxurystore"]
+                }
+              }
+            },
+            {
+              "id": "banner_luxury_002",
+              "name": "LuxuryStore Sale Banner",
+              "creative_url": "https://cdn.example.com/luxury_sale.jpg",
+              "landing_page": "https://luxurystore.com/sale",
+              "weight": 90,
+              "targeting_rules": {
+                "include_params": {},
+                "exclude_params": {
+                  "suppress_advertisers": ["adv_luxurystore"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "publishers": [
+    {
+      "id": "pub_technews",
+      "name": "TechNews Daily",
+      "sites": [
+        {
+          "id": "site_001", 
+          "name": "TechNews Main Site",
+          "domain": "technews.com",
+          "placements": [
+            {
+              "id": "pl_12345",
+              "name": "Homepage Banner",
+              "size": "728x90",
+              "position": "top",
+              "allowed_banners": [
+                "banner_techcorp_001", 
+                "banner_techcorp_002", 
+                "banner_gamestudio_001",
+                "banner_luxury_001"
+              ]
+            },
+            {
+              "id": "pl_12346",
+              "name": "Article Sidebar", 
+              "size": "300x250",
+              "position": "sidebar",
+              "allowed_banners": [
+                "banner_techcorp_001", 
+                "banner_gamestudio_001",
+                "banner_luxury_002"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pub_gaminghub",
+      "name": "Mobile Gaming Hub",
+      "sites": [
+        {
+          "id": "site_002",
+          "name": "Gaming Hub Mobile",
+          "domain": "gaminghub.com", 
+          "placements": [
+            {
+              "id": "pl_54321",
+              "name": "Mobile Banner",
+              "size": "320x50",
+              "position": "bottom",
+              "allowed_banners": [
+                "banner_gamestudio_001",
+                "banner_gamestudio_002"
+              ]
+            },
+            {
+              "id": "pl_54322",
+              "name": "Gaming Article Banner",
+              "size": "300x250", 
+              "position": "inline",
+              "allowed_banners": [
+                "banner_gamestudio_001",
+                "banner_techcorp_001"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
