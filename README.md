@@ -205,7 +205,6 @@ The system processes ad requests by checking user identifiers against advertiser
 ### Different Technology Choices
 - **Python vs Node.js**: Chose Node.js for better async performance in I/O-bound operations
 - **MongoDB vs SQL**: Selected relational model for better data integrity and complex query support
-- **gRPC vs REST**: Designed for REST but protocol-agnostic for future gRPC adoption
 
 ### Alternative Architectures
 - **Event Sourcing**: Considered for audit trails but deemed overkill for current requirements
@@ -260,7 +259,7 @@ The system processes ad requests by checking user identifiers against advertiser
 - Need for balancing strict validation with practical real-world data handling
 
 ### AI Tool Effectiveness
-AI tools were extremely helpful for:
+For this project, I have used DeepSeek R1, and it was extremely helpful for:
 - Generating boilerplate code quickly while maintaining quality
 - Exploring alternative architectural patterns and best practices
 - Identifying edge cases and potential failure scenarios
@@ -268,11 +267,9 @@ AI tools were extremely helpful for:
 
 Surprisingly effective at understanding complex ad tech requirements and suggesting industry-standard approaches, though required careful validation of generated code for production readiness.
 
+But I have observed some problems while trying to get assistance on fixing bugs, which I had to unfortunately explore and fix them myself along the way.
+
 ## Additional Notes
-The system demonstrates senior engineering expertise through its scalable design, comprehensive error handling, production-ready features, and clear migration path to distributed infrastructure. The implementation balances academic requirements with practical real-world considerations, providing a foundation that could be deployed to production with minimal additional work.
-
-The modular architecture allows easy extension with additional features like machine learning-based suppression or enhanced analytics, while maintaining performance and reliability for high-volume ad serving environments.
-
 ---
 
 ## File Structure
