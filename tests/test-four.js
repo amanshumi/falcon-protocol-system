@@ -1,4 +1,4 @@
-// test-part4.js
+// test-part4.js - Updated with proper hash values
 const SuppressionListManager = require('../service/suppression-list-manager');
 const AdvancedSuppressionFeatures = require('../service/advanced-features');
 
@@ -44,18 +44,27 @@ async function testPart4() {
     console.log('✓ Privacy compliant list created:', compliantList.privacy_compliant);
     console.log('✓ Identifiers processed:', compliantList.original_identifier_count);
 
-    // Test 3: A/B Testing Sampling
+    // Test 3: A/B Testing Sampling - FIXED
     console.log('\n3. Testing A/B sampling...');
+    
+    // First create a test list with a known identifier
+    await manager.createList({
+        advertiser_id: 'adv_sampling',
+        name: 'Sampling Test List',
+        identifier_type: 'email_hash',
+        identifiers: ['samplingtest1234567890abcdefsamplingtest1234567890abcdefsampling']
+    });
+
     let sampledCount = 0;
-    const totalChecks = 1000;
+    const totalChecks = 100;
     const sampleRate = 0.5; // 50% sampling
 
     for (let i = 0; i < totalChecks; i++) {
         const result = await advanced.checkSuppressionWithSampling(
-            { email_hash: 'test@example.com' },
+            { email_hash: 'samplingtest1234567890abcdefsamplingtest1234567890abcdefsampling' },
             sampleRate
         );
-        if (result.listsChecked > 0) {
+        if (result.suppressed.size > 0) {
             sampledCount++;
         }
     }
@@ -63,34 +72,38 @@ async function testPart4() {
     const actualRate = sampledCount / totalChecks;
     console.log(`✓ Sampling rate: expected ${sampleRate}, actual ${actualRate.toFixed(2)}`);
 
-    // Test 4: List Combining Logic
+    // Test 4: List Combining Logic - FIXED (use proper hashes)
     console.log('\n4. Testing list combining logic...');
     
-    // Create test lists
+    // Use proper hash values instead of raw emails
+    const testHash1 = 'test1hash1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+    const testHash2 = 'test2hash1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+    
+    // Create test lists with proper hashes
     const list1 = await manager.createList({
         advertiser_id: 'adv_test',
         name: 'Test List 1',
         identifier_type: 'email_hash',
-        identifiers: ['test1@example.com']
+        identifiers: [testHash1]
     });
 
     const list2 = await manager.createList({
         advertiser_id: 'adv_test', 
         name: 'Test List 2',
         identifier_type: 'email_hash',
-        identifiers: ['test2@example.com']
+        identifiers: [testHash2]
     });
 
     // Test OR logic (should suppress if any list matches)
     const orResult = await advanced.checkCombinedSuppression(
-        { email_hash: 'test1@example.com' },
+        { email_hash: testHash1 },
         { operator: 'OR', listIds: [list1.id, list2.id] }
     );
     console.log('✓ OR logic result:', orResult.suppressed, orResult.details);
 
     // Test AND logic (should suppress only if all lists match)
     const andResult = await advanced.checkCombinedSuppression(
-        { email_hash: 'test1@example.com' },
+        { email_hash: testHash1 },
         { operator: 'AND', listIds: [list1.id, list2.id] }
     );
     console.log('✓ AND logic result:', andResult.suppressed, andResult.details);

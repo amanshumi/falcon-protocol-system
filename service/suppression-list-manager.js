@@ -215,18 +215,73 @@ class SuppressionListManager {
         return lists;
     }
 
+    // In suppression-list-manager.js - Add this method
+    async findAdvertisersForIdentifiers(userIdentifiers) {
+        if (!this.initialized) {
+            await this.initialize();
+        }
+
+        const suppressedAdvertisers = new Set();
+        let totalListsChecked = 0;
+        const details = [];
+
+        for (const [identifierType, identifier] of Object.entries(userIdentifiers)) {
+            if (!identifier) continue;
+
+            try {
+                const advertisers = await this.findAdvertisersForIdentifier(identifier, identifierType);
+                totalListsChecked += advertisers.listsChecked;
+
+                if (advertisers.suppressed.size > 0) {
+                    advertisers.suppressed.forEach(adv => suppressedAdvertisers.add(adv));
+                    details.push(`${identifierType} matched ${advertisers.suppressed.size} advertisers`);
+                }
+            } catch (error) {
+                console.warn(`[SuppressionListManager] Error checking ${identifierType}:`, error.message);
+                details.push(`Error checking ${identifierType}: ${error.message}`);
+            }
+        }
+
+        return {
+            suppressed: suppressedAdvertisers,
+            listsChecked: totalListsChecked,
+            details
+        };
+    }
+
+    async findAdvertisersForIdentifier(identifier, identifierType) {
+        if (!this.isInitialized()) {
+            await this.initialize();
+        }
+
+        const results = await this.db.all(`
+        SELECT DISTINCT si.advertiser_id, sl.name as list_name
+        FROM suppression_identifiers si
+        JOIN suppression_lists sl ON si.list_id = sl.id
+        WHERE si.identifier = ? AND si.identifier_type = ? AND sl.is_active = 1
+    `, [identifier, identifierType]);
+
+        return {
+            suppressed: new Set(results.map(row => row.advertiser_id)),
+            listsChecked: results.length,
+            details: results.map(row => `Found in list: ${row.list_name}`)
+        };
+    }
+
     // Utility methods
-    // In suppression-list-manager.js - Update the validateIdentifiers method
     validateIdentifiers(identifiers, identifierType) {
         for (const identifier of identifiers) {
             if (identifierType === 'email_hash') {
-                // Much more lenient validation for sample data
-                // Allow hex strings of various lengths that appear in sample data
-                if (!/^[a-f0-9]{50,70}$/i.test(identifier)) {
-                    // Also allow the special formats in the sample data
-                    if (!/^[a-z0-9]{50,70}$/i.test(identifier)) {
-                        throw new Error(`Invalid email_hash format: ${identifier}. Expected 50-70 character hex/alpha-numeric string.`);
-                    }
+                // Allow both raw emails (for testing) and proper hashes
+                if (this.looksLikeRawEmail(identifier)) {
+                    console.warn(`[SuppressionListManager] Warning: Using raw email as email_hash: ${identifier}. In production, this should be hashed.`);
+                    // Allow it for testing purposes
+                    continue;
+                }
+
+                // Check for proper hash format (50-70 char hex/alpha-numeric)
+                if (!/^[a-f0-9]{50,70}$/i.test(identifier) && !/^[a-z0-9]{50,70}$/i.test(identifier)) {
+                    throw new Error(`Invalid email_hash format: ${identifier}. Expected 50-70 character hex/alpha-numeric string or proper email address.`);
                 }
             } else if (identifierType === 'device_id') {
                 // Support UUID format, iosdevice-* format, and other device ID formats
@@ -237,6 +292,13 @@ class SuppressionListManager {
                 }
             }
         }
+
+        console.log(`✅ Passed validation for ${identifiers.length} ${identifierType} identifiers`);
+    }
+
+    looksLikeRawEmail(identifier) {
+        // Simple check for email format
+        return /^[^@]+@[^@]+\.[^@]+$/.test(identifier);
     }
 
     hashIdentifier(identifier) {

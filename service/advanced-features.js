@@ -12,7 +12,7 @@ class AdvancedSuppressionFeatures {
     // Feature 1: List Expiration with TTL
     async applyExpirationPolicy(retentionDays = 90) {
         console.log(`[Advanced] Applying expiration policy: ${retentionDays} days retention`);
-        
+
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
 
@@ -40,7 +40,7 @@ class AdvancedSuppressionFeatures {
     // Feature 2: Privacy Compliance - Hash incoming identifiers
     async createPrivacyCompliantList(listData) {
         // Ensure all identifiers are hashed before storage
-        const hashedIdentifiers = listData.identifiers.map(identifier => 
+        const hashedIdentifiers = listData.identifiers.map(identifier =>
             this.encryptionService.hashIdentifier(identifier)
         );
 
@@ -77,10 +77,28 @@ class AdvancedSuppressionFeatures {
         return await this.manager.findAdvertisersForIdentifiers(userIdentifiers);
     }
 
+    async checkSuppressionWithSampling(userIdentifiers, sampleRate = 1.0) {
+        if (sampleRate >= 1.0) {
+            // Full suppression - normal behavior
+            return await this.manager.findAdvertisersForIdentifiers(userIdentifiers);
+        }
+
+        if (Math.random() > sampleRate) {
+            // Not sampled - no suppression
+            return {
+                suppressed: new Set(),
+                listsChecked: 0,
+                details: ['User not sampled for suppression']
+            };
+        }
+
+        // Sampled - apply normal suppression
+        return await this.manager.findAdvertisersForIdentifiers(userIdentifiers);
+    }
     // Feature 4: List Combining with AND/OR logic
     async checkCombinedSuppression(userIdentifiers, logicConfig) {
         const { operator = 'OR', listIds = [] } = logicConfig;
-        
+
         if (listIds.length === 0) {
             return { suppressed: false, details: [] };
         }
@@ -113,8 +131,8 @@ class AdvancedSuppressionFeatures {
             if (!identifier || identifierType !== list.identifier_type) continue;
 
             if (list.identifiers.includes(identifier)) {
-                return { 
-                    suppressed: true, 
+                return {
+                    suppressed: true,
                     reason: `Found in list: ${list.name}`,
                     advertiserId: list.advertiser_id
                 };
@@ -163,7 +181,7 @@ class AdvancedSuppressionFeatures {
 
         // Remove old user identifiers
         results.identifiersRemoved = await this.removeOldIdentifiers(retentionConfig.user_identifiers);
-        
+
         // Archive old audit logs
         results.auditLogsArchived = await this.archiveOldAuditLogs(retentionConfig.audit_logs);
 
@@ -234,6 +252,7 @@ class AuditLogger {
 class RateLimiter {
     constructor() {
         this.limits = new Map();
+        this.requestCounts = new Map(); // Use Map instead of localStorage
         this.setDefaultLimits();
     }
 
@@ -248,9 +267,9 @@ class RateLimiter {
         const key = `${advertiserId}_${operation}_${this.getCurrentMinute()}`;
         const limit = this.limits.get(operation) || 10;
 
-        // In production, this would use Redis with atomic operations
+        // Get current count from Map
         const currentCount = this.getCurrentCount(key);
-        
+
         if (currentCount >= limit) {
             return {
                 allowed: false,
@@ -276,14 +295,41 @@ class RateLimiter {
     }
 
     getCurrentCount(key) {
-        // In production, use Redis
-        return parseInt(localStorage.getItem(key) || '0');
+        // Use Map instead of localStorage
+        return this.requestCounts.get(key) || 0;
     }
 
     incrementCount(key) {
-        // In production, use Redis INCR
+        // Use Map instead of localStorage
         const current = this.getCurrentCount(key);
-        localStorage.setItem(key, (current + 1).toString());
+        this.requestCounts.set(key, current + 1);
+
+        // Clean up old entries periodically (simple approach)
+        this.cleanupOldEntries();
+    }
+
+    cleanupOldEntries() {
+        const currentMinute = this.getCurrentMinute();
+        const keysToDelete = [];
+
+        for (const [key] of this.requestCounts) {
+            const keyMinute = parseInt(key.split('_').pop());
+            // Remove entries older than 2 minutes
+            if (currentMinute - keyMinute > 2) {
+                keysToDelete.push(key);
+            }
+        }
+
+        keysToDelete.forEach(key => this.requestCounts.delete(key));
+    }
+
+    // Add method to get current state for debugging
+    getState() {
+        return {
+            limits: Object.fromEntries(this.limits),
+            requestCounts: Object.fromEntries(this.requestCounts),
+            totalKeys: this.requestCounts.size
+        };
     }
 }
 
@@ -304,12 +350,12 @@ class EncryptionService {
         const iv = crypto.randomBytes(16);
         const cipher = crypto.createCipher(this.algorithm, this.encryptionKey);
         cipher.setAAD(Buffer.from('suppression-list'));
-        
+
         let encrypted = cipher.update(identifier, 'utf8', 'hex');
         encrypted += cipher.final('hex');
-        
+
         const authTag = cipher.getAuthTag();
-        
+
         return {
             iv: iv.toString('hex'),
             data: encrypted,
@@ -322,10 +368,10 @@ class EncryptionService {
             const decipher = crypto.createDecipher(this.algorithm, this.encryptionKey);
             decipher.setAAD(Buffer.from('suppression-list'));
             decipher.setAuthTag(Buffer.from(encryptedData.authTag, 'hex'));
-            
+
             let decrypted = decipher.update(encryptedData.data, 'hex', 'utf8');
             decrypted += decipher.final('utf8');
-            
+
             return decrypted;
         } catch (error) {
             throw new Error('Failed to decrypt identifier');
