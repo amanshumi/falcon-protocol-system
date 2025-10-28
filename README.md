@@ -29,7 +29,7 @@ cd falcon-suppression-system
 
 # Install dependencies
 npm install
-
+```
 ### Running the Application
 ```bash
 # Start the demo application
