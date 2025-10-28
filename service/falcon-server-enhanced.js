@@ -1,4 +1,3 @@
-// falcon-server-enhanced.js - COMPLETELY REWRITTEN
 const { FalconServer, FalconRequest, SuppressionCheckResult } = require('../falcon_server');
 const SuppressionListManager = require('./suppression-list-manager');
 const { performance } = require('perf_hooks');
@@ -29,12 +28,7 @@ class EnhancedFalconServer extends FalconServer {
         console.log('[EnhancedFalconServer] Initialized and connected to suppression manager.');
     }
 
-    async initialize() {
-        // if (this.initialized) {
-        //     console.log('[EnhancedFalconServer] Already initialized');
-        //     return;
-        // }
-        
+    async initialize() {        
         console.log('[EnhancedFalconServer] Starting initialization...');
         
         try {

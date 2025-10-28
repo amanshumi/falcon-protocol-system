@@ -1,4 +1,3 @@
-// advanced-features.js
 const crypto = require('crypto');
 
 class AdvancedSuppressionFeatures {

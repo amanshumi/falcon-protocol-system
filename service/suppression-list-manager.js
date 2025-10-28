@@ -1,4 +1,3 @@
-// suppression-list-manager.js
 const sqlite3 = require('sqlite3').verbose();
 const { open } = require('sqlite');
 const path = require('path');
@@ -215,7 +214,6 @@ class SuppressionListManager {
         return lists;
     }
 
-    // In suppression-list-manager.js - Add this method
     async findAdvertisersForIdentifiers(userIdentifiers) {
         if (!this.initialized) {
             await this.initialize();
