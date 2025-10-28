@@ -6,13 +6,14 @@ const fs = require('fs');
 const crypto = require('crypto');
 
 class SuppressionListManager {
-    constructor(dbPath = '../db/suppression_lists.db') {
+    constructor(dbPath = '../data/suppression_lists.db') {
         this.dbPath = dbPath;
         this.db = null;
         this.initialized = false;
     }
 
     async initialize() {
+        console.log('[SuppressionListManager] Initializing database at', this.dbPath);
         if (this.dbPath !== ':memory:') {
             const dir = path.dirname(this.dbPath);
             if (!fs.existsSync(dir)) {
@@ -21,13 +22,16 @@ class SuppressionListManager {
             }
         }
 
-        this.db = await open({
-            filename: this.dbPath,
-            driver: sqlite3.Database
-        });
+        try {
+            this.db = await open({
+                filename: this.dbPath,
+                driver: sqlite3.Database
+            });
 
-        // Create optimized schema for fast lookups
-        await this.db.exec(`
+            console.log('[SuppressionListManager] Setting up database schema...');
+
+            // Create optimized schema for fast lookups
+            await this.db.exec(`
             CREATE TABLE IF NOT EXISTS suppression_lists (
                 id TEXT PRIMARY KEY,
                 advertiser_id TEXT NOT NULL,
@@ -57,8 +61,12 @@ class SuppressionListManager {
             CREATE INDEX IF NOT EXISTS idx_identifier_type ON suppression_identifiers(identifier_type, identifier_hash);
         `);
 
-        this.initialized = true;
-        console.log('[SuppressionListManager] Database initialized with optimized indexes');
+            this.initialized = true;
+            console.log('[SuppressionListManager] Database initialized with optimized indexes');
+        } catch (error) {
+            console.log('[SuppressionListManager] Database initialization failed:', error);
+            throw error;
+        }
     }
 
     async createList(listData) {

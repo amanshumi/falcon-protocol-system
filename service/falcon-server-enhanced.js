@@ -22,7 +22,7 @@ class EnhancedFalconServer extends FalconServer {
             suppressionChecks: 0,
             averageLookupTime: 0
         };
-        
+    
         // 3. We are initialized BY DEFAULT now
         this.initialized = true; 
 
@@ -30,10 +30,10 @@ class EnhancedFalconServer extends FalconServer {
     }
 
     async initialize() {
-        if (this.initialized) {
-            console.log('[EnhancedFalconServer] Already initialized');
-            return;
-        }
+        // if (this.initialized) {
+        //     console.log('[EnhancedFalconServer] Already initialized');
+        //     return;
+        // }
         
         console.log('[EnhancedFalconServer] Starting initialization...');
         
@@ -42,7 +42,7 @@ class EnhancedFalconServer extends FalconServer {
             console.log('[EnhancedFalconServer] Step 1: Initializing suppression manager...');
             await this.suppressionManager.initialize();
             console.log('[EnhancedFalconServer] ✅ Suppression manager initialized');
-            
+
             // STEP 2: Load sample data
             console.log('[EnhancedFalconServer] Step 2: Loading sample data...');
             await this.loadSuppressionLists();
@@ -58,7 +58,7 @@ class EnhancedFalconServer extends FalconServer {
     }
 
     async loadSuppressionLists() {
-        console.log('[EnhancedFalconServer] Loading suppression lists from sample data...', this.suppressionManager);
+        console.log('[EnhancedFalconServer] Loading suppression lists from sample data...');
         
         // CRITICAL: Check if suppressionManager exists and is initialized
         if (!this.suppressionManager) {
@@ -109,13 +109,12 @@ class EnhancedFalconServer extends FalconServer {
     async ensureInitialized() {
         if (!this.initialized) {
             console.log('[EnhancedFalconServer] Not initialized, initializing now...');
-            await this.initialize();
+            await this.suppressionManager.initialize();
         }
     }
 
     async checkUserSuppression(userIdentifiers) {
         await this.ensureInitialized();
-        
         const startTime = performance.now();
         const suppressedAdvertisers = new Set();
         const details = [];
@@ -281,7 +280,7 @@ class EnhancedFalconServer extends FalconServer {
         } catch (error) {
             console.error('[EnhancedFalconServer] Error serving ad:', error);
             // Fallback: serve ad without suppression checking
-            const AdRequest = require('./ad_server').AdRequest;
+            const AdRequest = require('../ad_server').AdRequest;
             const adRequest = new AdRequest(
                 falconRequest.placementId,
                 falconRequest.userIdentifiers.email_hash,
