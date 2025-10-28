@@ -1,4 +1,3 @@
-// test-part2.js
 const SuppressionListManager = require('../service/suppression-list-manager');
 const SuppressionListImporter = require('../service/suppression-list-importer');
 const fs = require('fs');
@@ -13,7 +12,7 @@ async function testPart2() {
     // Test 1: CSV Import
     console.log('1. Testing CSV import...');
     try {
-        const importResult = await importer.importFromCSV('./mock_data/bulk_import_sample.csv', {
+        const importResult = await importer.importFromCSV('../mock_data/bulk_import_sample.csv', {
             batchSize: 100,
             deduplicate: true,
             validate: true
@@ -29,11 +28,11 @@ async function testPart2() {
     // Test 2: Export to CSV
     console.log('\n2. Testing CSV export...');
     try {
-        const exportCount = await importer.exportToCSV('adv_techcorp', './test_export.csv');
+        const exportCount = await importer.exportToCSV('adv_techcorp', '../test_export.csv');
         console.log('✓ CSV export completed:', exportCount, 'identifiers exported');
 
         // Clean up test file
-        fs.unlinkSync('./test_export.csv');
+        fs.unlinkSync('../test_export.csv');
     } catch (error) {
         console.log('✗ CSV export failed:', error.message);
     }

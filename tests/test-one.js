@@ -1,4 +1,3 @@
-// test-part1.js
 const SuppressionListManager = require('../service/suppression-list-manager');
 const fs = require('fs');
 

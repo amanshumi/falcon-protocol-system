@@ -1,4 +1,3 @@
-// test-part3.js - Part 3: Ad Server Integration Tests
 const { AdServer } = require('../ad_server');
 const EnhancedFalconServer = require('../service/falcon-server-enhanced');
 

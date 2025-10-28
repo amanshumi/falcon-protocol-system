@@ -1,4 +1,3 @@
-// test-complete-system.js
 const { AdServer } = require('../ad_server');
 const EnhancedFalconServer = require('../service/falcon-server-enhanced');
 const testRequests = require('../mock_data/test_ad_requests.json');
