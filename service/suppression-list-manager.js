@@ -248,7 +248,7 @@ class SuppressionListManager {
     }
 
     async findAdvertisersForIdentifier(identifier, identifierType) {
-        if (!this.isInitialized()) {
+        if (!this.initialized || !this.db) {
             await this.initialize();
         }
 
