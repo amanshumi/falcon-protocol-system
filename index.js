@@ -1,53 +1,48 @@
-// index.js - Updated with proper async handling
+// index.js - UPDATED
 const { AdServer } = require('./ad_server');
 const EnhancedFalconServer = require('./service/falcon-server-enhanced');
 const SuppressionListManager = require('./service/suppression-list-manager');
-const path = require('path');
 
 class SuppressionListSystem {
     constructor(config = {}) {
         this.config = {
-            dbPath: path.join(__dirname, 'db', 'suppression_lists.db'),
-            enableAdvancedFeatures: false, // Disable for now to avoid errors
+            dbPath: ':memory:', // Force in-memory for reliability
+            enableAdvancedFeatures: false,
             cacheEnabled: true,
             ...config
         };
         
-        this.manager = null;
         this.adServer = null;
         this.falconServer = null;
         this.initialized = false;
     }
 
     async initialize() {
-        if (this.initialized) return this;
+        if (this.initialized) {
+            console.log('✅ System already initialized');
+            return this;
+        }
         
-        console.log('🚀 Initializing Suppression List System...');
+        console.log('🚀 Starting Suppression List System initialization...');
         
         try {
-            // Ensure data directory exists
-            const fs = require('fs');
-            const dataDir = path.dirname(this.config.dbPath);
-            if (!fs.existsSync(dataDir)) {
-                fs.mkdirSync(dataDir, { recursive: true });
-                console.log('✅ Created data directory:', dataDir);
-            }
-            
-            // Initialize components in order
-            this.manager = new SuppressionListManager(this.config.dbPath);
-            await this.manager.initialize();
-            
+            // STEP 1: Initialize ad server
+            console.log('Step 1: Initializing ad server...');
             this.adServer = new AdServer();
-            this.falconServer = new EnhancedFalconServer(this.adServer, this.config);
+            console.log('✅ Ad server initialized');
             
-            // Wait for falcon server to initialize
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // STEP 2: Initialize falcon server
+            console.log('Step 2: Initializing falcon server...');
+            this.falconServer = new EnhancedFalconServer(this.adServer, new SuppressionListManager(), this.config);
+            console.log('✅ Falcon server instance created');
             
-            // Load sample data for demonstration
-            await this.loadSampleData();
+            // STEP 3: Initialize falcon server components
+            console.log('Step 3: Initializing falcon server components...');
+            await this.falconServer.initialize();
+            console.log('✅ Falcon server components initialized');
             
             this.initialized = true;
-            console.log('✅ Suppression List System ready!');
+            console.log('🎉 Suppression List System ready!');
             return this;
             
         } catch (error) {
@@ -56,33 +51,9 @@ class SuppressionListSystem {
         }
     }
 
-    async loadSampleData() {
-        try {
-            const sampleData = require('./mock_data/sample_suppression_lists.json');
-            let loadedCount = 0;
-            let skippedCount = 0;
-            
-            for (const listData of sampleData) {
-                try {
-                    await this.manager.createList(listData);
-                    loadedCount++;
-                } catch (error) {
-                    if (error.message.includes('UNIQUE constraint failed')) {
-                        skippedCount++;
-                    } else {
-                        console.warn(`Failed to load list ${listData.id}:`, error.message);
-                    }
-                }
-            }
-            
-            console.log(`📊 Loaded ${loadedCount} sample lists (${skippedCount} already existed)`);
-        } catch (error) {
-            console.warn('⚠️ Could not load sample data:', error.message);
-        }
-    }
-
     async serveAd(adRequest) {
         if (!this.initialized) {
+            console.log('System not initialized, initializing now...');
             await this.initialize();
         }
 
@@ -113,8 +84,8 @@ class SuppressionListSystem {
 
         const stats = {
             system: this.falconServer ? this.falconServer.getSuppressionStats() : {},
-            storage: this.manager ? await this.manager.getStats() : {},
-            status: 'ready'
+            status: 'ready',
+            initialized: this.initialized
         };
         
         return stats;
@@ -122,8 +93,8 @@ class SuppressionListSystem {
 
     async shutdown() {
         console.log('🛑 Shutting down Suppression List System...');
-        if (this.manager && this.manager.db) {
-            await this.manager.db.close();
+        if (this.falconServer && this.falconServer.suppressionManager && this.falconServer.suppressionManager.db) {
+            await this.falconServer.suppressionManager.db.close();
         }
         this.initialized = false;
         console.log('✅ System shutdown complete');
@@ -137,7 +108,7 @@ if (require.main === module) {
     async function main() {
         console.log('🎯 Suppression List System Demo\n');
         
-        // Use in-memory database to avoid file system issues
+        // Use in-memory database
         const system = new SuppressionListSystem({ dbPath: ':memory:' });
         
         try {

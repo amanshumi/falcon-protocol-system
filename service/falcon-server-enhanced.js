@@ -1,20 +1,19 @@
-// falcon-server-enhanced.js - Complete rewrite with proper initialization
+// falcon-server-enhanced.js - COMPLETELY REWRITTEN
 const { FalconServer, FalconRequest, SuppressionCheckResult } = require('../falcon_server');
 const SuppressionListManager = require('./suppression-list-manager');
 const { performance } = require('perf_hooks');
 
 class EnhancedFalconServer extends FalconServer {
-    constructor(adServer, options = {}) {
+    constructor(adServer, suppressionManager, options = {}) {
         super(adServer);
         
         this.config = {
-            dbPath: options.dbPath || ':memory:',
             cacheEnabled: options.cache !== false,
             ...options
         };
         
-        // Initialize properties first
-        this.suppressionManager = null;
+        // 2. ASSIGN the manager directly. It's already initialized!
+        this.suppressionManager = suppressionManager;
         this.cache = new Map();
         this.cacheHits = 0;
         this.cacheMisses = 0;
@@ -23,47 +22,71 @@ class EnhancedFalconServer extends FalconServer {
             suppressionChecks: 0,
             averageLookupTime: 0
         };
-        this.initialized = false;
-
-        console.log('[EnhancedFalconServer] Initialized, setting up suppression system...');
         
-        // Initialize asynchronously
-        this.initializeSuppression().catch(error => {
-            console.error('[EnhancedFalconServer] Failed to initialize suppression:', error);
-        });
+        // 3. We are initialized BY DEFAULT now
+        this.initialized = true; 
+
+        console.log('[EnhancedFalconServer] Initialized and connected to suppression manager.');
     }
 
-    async initializeSuppression() {
-        console.log('[EnhancedFalconServer] Initializing suppression system...');
+    async initialize() {
+        if (this.initialized) {
+            console.log('[EnhancedFalconServer] Already initialized');
+            return;
+        }
+        
+        console.log('[EnhancedFalconServer] Starting initialization...');
         
         try {
-            // Initialize suppression manager
-            this.suppressionManager = new SuppressionListManager(this.config.dbPath);
+            // STEP 1: Initialize suppression manager
+            console.log('[EnhancedFalconServer] Step 1: Initializing suppression manager...');
             await this.suppressionManager.initialize();
+            console.log('[EnhancedFalconServer] ✅ Suppression manager initialized');
             
-            // Load sample data
+            // STEP 2: Load sample data
+            console.log('[EnhancedFalconServer] Step 2: Loading sample data...');
             await this.loadSuppressionLists();
+            console.log('[EnhancedFalconServer] ✅ Sample data loaded');
             
             this.initialized = true;
-            console.log('[EnhancedFalconServer] Suppression system ready!');
+            console.log('[EnhancedFalconServer] 🎉 Initialization complete!');
+            
         } catch (error) {
-            console.error('[EnhancedFalconServer] Failed to initialize suppression system:', error);
+            console.error('[EnhancedFalconServer] ❌ Initialization failed:', error);
             throw error;
         }
     }
 
     async loadSuppressionLists() {
-        console.log('[EnhancedFalconServer] Loading suppression lists...');
+        console.log('[EnhancedFalconServer] Loading suppression lists from sample data...', this.suppressionManager);
+        
+        // CRITICAL: Check if suppressionManager exists and is initialized
+        if (!this.suppressionManager) {
+            console.error('[EnhancedFalconServer] ❌ suppressionManager is undefined!');
+            throw new Error('suppressionManager is not initialized');
+        }
         
         try {
             const sampleData = require('../mock_data/sample_suppression_lists.json');
             let loadedCount = 0;
             let errorCount = 0;
             
+            console.log(`[EnhancedFalconServer] Found ${sampleData.length} lists to load`);
+            
             for (const listData of sampleData) {
                 try {
+                    console.log(`[EnhancedFalconServer] Loading list: ${listData.id}`);
+                    
+                    // Double-check suppressionManager exists
+                    if (!this.suppressionManager || !this.suppressionManager.createList) {
+                        console.error(`[EnhancedFalconServer] suppressionManager.createList is not available for list ${listData.id}`);
+                        continue;
+                    }
+                    
                     await this.suppressionManager.createList(listData);
                     loadedCount++;
+                    console.log(`[EnhancedFalconServer] ✅ Loaded list: ${listData.id}`);
+                    
                 } catch (error) {
                     errorCount++;
                     if (error.message.includes('UNIQUE constraint failed')) {
@@ -74,15 +97,19 @@ class EnhancedFalconServer extends FalconServer {
                 }
             }
             
-            console.log(`[EnhancedFalconServer] Loaded ${loadedCount} lists, ${errorCount} errors`);
+            console.log(`[EnhancedFalconServer] 📊 Loaded ${loadedCount} lists, ${errorCount} errors`);
+            return { loadedCount, errorCount };
+            
         } catch (error) {
             console.error('[EnhancedFalconServer] Failed to load sample data:', error);
+            throw error;
         }
     }
 
     async ensureInitialized() {
         if (!this.initialized) {
-            await this.initializeSuppression();
+            console.log('[EnhancedFalconServer] Not initialized, initializing now...');
+            await this.initialize();
         }
     }
 
@@ -161,7 +188,7 @@ class EnhancedFalconServer extends FalconServer {
     }
 
     async findAdvertisersForIdentifier(identifier, identifierType) {
-        if (!this.suppressionManager || !this.suppressionManager.db) {
+        if (!this.initialized || !this.suppressionManager || !this.suppressionManager.db) {
             throw new Error('Suppression manager not initialized');
         }
 
@@ -209,7 +236,8 @@ class EnhancedFalconServer extends FalconServer {
             avg_lookup_time_ms: Math.round(this.stats.averageLookupTime * 100) / 100,
             cache_size: this.cache.size,
             total_suppression_checks: this.stats.suppressionChecks,
-            initialized: this.initialized
+            initialized: this.initialized,
+            suppression_manager_available: !!this.suppressionManager
         };
     }
 
@@ -253,7 +281,7 @@ class EnhancedFalconServer extends FalconServer {
         } catch (error) {
             console.error('[EnhancedFalconServer] Error serving ad:', error);
             // Fallback: serve ad without suppression checking
-            const AdRequest = require('../ad_server').AdRequest;
+            const AdRequest = require('./ad_server').AdRequest;
             const adRequest = new AdRequest(
                 falconRequest.placementId,
                 falconRequest.userIdentifiers.email_hash,
