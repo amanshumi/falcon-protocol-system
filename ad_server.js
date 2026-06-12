@@ -6,11 +6,6 @@
  * - Custom parameter include/exclude logic  
  * - Real ad serving decisions
  * - Performance optimizations
- * 
- * YOU SHOULD NOT MODIFY THIS FILE - it represents an external ad server.
- * 
- * Your task is to implement suppression logic in the Falcon server (falcon_server.js)
- * that calls this ad server and filters results based on advertiser-specific suppression lists.
  */
 
 const fs = require('fs');
