@@ -1,17 +1,4 @@
-# Suppression List System - Submission Template
-
-## Candidate Information
-- **Name**: Amanuel Shumi
-- **Email**: amanuelshumi14@gmail.com
-- **Date**: October 28, 2025
-- **Time Spent**: ~6 hours (Exceeded the limit)
-
-## Parts Completed
-Please check which parts you completed:
-- [x] Part 1: Basic Suppression List Storage
-- [x] Part 2: List Management and Validation  
-- [x] Part 3: Ad Server Integration
-- [x] Part 4: Advanced Features and Production Considerations
+# Ad Suppression List System
 
 ## Quick Start Instructions
 
@@ -137,20 +124,6 @@ The system processes ad requests by checking user identifiers against advertiser
 - **Alerting**: P99 latency > 50ms, error rate > 1%, cache hit ratio < 80%, storage utilization > 80%
 - **Logging**: Structured JSON logs with correlation IDs, log levels, and automated retention
 
-### Deployment Strategy
-- **Blue-Green Deployment**: Zero-downtime updates with instant rollback capability
-- **Feature Flags**: Gradual rollouts of new functionality with percentage-based activation
-- **Database Migrations**: Forward-compatible schema changes with automated rollback procedures
-- **Canary Testing**: 1% traffic to new versions initially, with progressive ramp-up
-
-## Tool Usage Report
-
-### AI Tools Used
-| Tool | Purpose | How It Helped | Effectiveness (1-5) |
-|------|---------|---------------|-------------------|
-| Claude | Architecture design, code generation | Helped with database schema design, caching strategies, and production considerations | 5/5 |
-| ChatGPT | Algorithm optimization, edge cases | Assisted with deduplication logic, rate limiting algorithms, and error handling patterns | 4/5 |
-
 ### Development Tools
 | Tool | Purpose | Why Chosen |
 |------|---------|------------|
@@ -158,64 +131,13 @@ The system processes ad requests by checking user identifiers against advertiser
 | Node.js | Runtime | High performance for I/O-bound operations, rich ecosystem |
 | SQLite | Development database | Simple setup, easy migration path to production databases |
 
-### Learning Resources
-- Redis documentation for distributed caching patterns
-- Ad tech industry best practices for suppression systems
-- Node.js performance optimization guides
-- Database indexing strategies for high-volume applications
-
 ## Testing Strategy
-
-### Test Data
-- Utilized all provided sample data files including 7 suppression lists, 5 ad request test cases, and bulk import CSV
-- Extended with edge cases: invalid identifiers, duplicate entries, malformed requests, and performance edge cases
-- Created comprehensive test suites for each part with realistic scenarios and expected outcomes
 
 ### Test Cases
 - **Part 1**: CRUD operations, duplicate handling, error conditions, transaction safety
 - **Part 2**: CSV import/export, validation rules, deduplication, metrics collection
 - **Part 3**: Real-time suppression checking, multi-identifier support, cache performance, integration with ad server
 - **Part 4**: Advanced features functionality, error resilience, performance under load
-
-### Performance Testing
-- Benchmarking with 100K+ identifiers showing sub-10ms lookup times
-- Concurrent request testing with 1000+ RPS demonstrating linear scaling
-- Memory usage profiling confirming efficient resource utilization
-- Cache performance validation with 85%+ hit rates
-
-## Challenges & Solutions
-
-### Major Challenges
-1. **Initialization Race Conditions**: Components trying to use suppression manager before proper initialization
-   - **Solution**: Implemented proper async initialization sequence with state tracking and explicit initialization methods
-
-2. **Sample Data Compatibility**: Strict validation rejecting real-world sample data formats
-   - **Solution**: Implemented lenient validation that accepts both production formats and sample data, with warnings for non-compliant data
-
-3. **Performance at Scale**: Ensuring sub-millisecond lookups with million-scale identifiers
-   - **Solution**: Multi-level caching strategy (LRU + database indexes), efficient data structures, and connection pooling
-
-### Trade-offs Made
-1. **Development vs Production Databases**: Used SQLite for simplicity with clear migration path to distributed databases
-2. **Validation Strictness**: Balanced strict production validation with lenient sample data acceptance for testing
-3. **Memory vs Performance**: Chose to cache hot data in memory despite higher memory usage for better performance
-
-## Alternative Approaches Considered
-
-### Different Technology Choices
-- **Python vs Node.js**: Chose Node.js for better async performance in I/O-bound operations
-- **MongoDB vs SQL**: Selected relational model for better data integrity and complex query support
-
-### Alternative Architectures
-- **Event Sourcing**: Considered for audit trails but deemed overkill for current requirements
-- **Serverless**: Evaluated Lambda but chose containers for better control over performance and state
-- **Microservices**: Considered splitting components but kept monolithic for simplicity with clear separation
-
-### Future Improvements
-- Machine learning for automatic list optimization and predictive suppression
-- Real-time streaming updates instead of batch processing for list management
-- Enhanced analytics dashboard with real-time metrics and reporting
-- GraphQL API for flexible querying and reduced over-fetching
 
 ## Code Quality Notes
 
@@ -225,52 +147,11 @@ The system processes ad requests by checking user identifiers against advertiser
 - **Factory Pattern**: For list creation with different validation strategies
 - **Observer Pattern**: For audit logging and event tracking
 
-### Error Handling Strategy
-- Comprehensive input validation at multiple levels
-- Graceful degradation with fallback modes for dependent services
-- Detailed error messages with context for debugging
-- Automatic retry with exponential backoff for transient failures
-
 ### Testing Approach
 - **Unit Tests**: Individual components and methods with mocked dependencies
 - **Integration Tests**: Component interactions and data flow validation
 - **Performance Tests**: Load testing and benchmark validation
 - **End-to-End Tests**: Complete system workflow from ad request to response
-
-## Reflection
-
-### What Went Well
-- Clean separation of concerns between storage, business logic, and integration layers
-- Comprehensive test coverage with realistic scenarios and edge cases
-- Production-ready architecture considerations from the start
-- Efficient algorithms and data structures for high-volume operations
-- Proper error handling and graceful degradation strategies
-
-### What Could Be Improved
-- More extensive performance benchmarking with larger datasets
-- Additional security penetration testing and vulnerability assessment
-- Enhanced documentation for API consumers and integration guides
-- More configuration options for fine-tuning performance parameters
-
-### Lessons Learned
-- Importance of proper async initialization sequences in Node.js applications
-- Value of comprehensive audit trails for both debugging and compliance
-- Benefits of feature flags for gradual rollouts and experimentation
-- Need for balancing strict validation with practical real-world data handling
-
-### AI Tool Effectiveness
-For this project, I have used DeepSeek R1, and it was extremely helpful for:
-- Generating boilerplate code quickly while maintaining quality
-- Exploring alternative architectural patterns and best practices
-- Identifying edge cases and potential failure scenarios
-- Optimizing database query performance and indexing strategies
-
-Surprisingly effective at understanding complex ad tech requirements and suggesting industry-standard approaches, though required careful validation of generated code for production readiness.
-
-But I have observed some problems while trying to get assistance on fixing bugs, which I had to unfortunately explore and fix them myself along the way.
-
-## Additional Notes
----
 
 ## File Structure
 ```
